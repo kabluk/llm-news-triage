@@ -1,0 +1,39 @@
+# When and how the digest goes out. Merged with rules.yaml (keys must not overlap).
+# Secrets and recipients are never stored here: they come from environment
+# variables (see .env.example).
+
+topic: "AI model releases & research"
+
+schedule:
+  timezone: America/New_York
+  slots: ["08:00", "17:00"]
+  # Minutes after a slot during which a run still counts as that slot
+  # (cron and CI schedulers can be late).
+  grace_minutes: 180
+
+digest:
+  top_min: 3
+  top_max: 5
+  others_max: 30
+  # An event is in the issue if it has items discovered since the previous
+  # sent issue, but no older than this window.
+  window_hours: 72
+  # Items older than this on first sight are stored as background and kept out
+  # of the issue (otherwise the first run mails a feed's whole archive).
+  max_item_age_hours: 96
+  # Do not send an email when nothing is new.
+  skip_if_nothing_new: true
+  subject_prefix: "[AI triage]"
+
+http:
+  user_agent: "newstriage/0.1 (+https://github.com/kabluk/llm-news-triage; contact: {contact})"
+  timeout: 30
+  retries: 2
+  default_crawl_delay: 2
+
+llm:
+  # Enrichment runs only if ANTHROPIC_API_KEY is set. The model id comes from
+  # NEWSTRIAGE_MODEL (default claude-sonnet-5-5).
+  enabled_if_key: true
+  effort: medium
+  max_events: 8

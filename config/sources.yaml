@@ -1,0 +1,95 @@
+# Source registry. Health of the last check is stored in SQLite and shown by
+# `python -m newstriage sources` (add --probe to fetch every enabled source live).
+#
+# Each feed below was checked live with curl on 2026-10-05 (HTTP 200, entries parsed).
+#
+# method:  rss   RSS 2.0 or Atom feed published by the source (the only built-in fetcher)
+# type:    free label used by doc_types rules in rules.yaml (company, lab, preprint, news, ...)
+# role:    primary   - the publisher of the thing itself (lab blog, paper server)
+#          reporting - an outlet reporting on it
+#          signal    - aggregator; only a pointer, the original must be found
+# relevance: all      - keep every entry
+#            keywords - keep entries passing the relevance filter in rules.yaml
+#            strong   - keep only entries with a "strong" phrase
+# max_items: read at most N entries per fetch (busy feeds)
+# min_interval_hours: poll at most this often (0 = every run)
+
+sources:
+  - id: openai_news
+    name: OpenAI News
+    url: https://openai.com/news/rss.xml
+    type: company
+    role: primary
+    method: rss
+    enabled: true
+    relevance: all
+    max_items: 40
+
+  - id: google_ai_blog
+    name: Google AI Blog
+    url: https://blog.google/technology/ai/rss/
+    type: company
+    role: primary
+    method: rss
+    enabled: true
+    relevance: all
+
+  - id: google_research_blog
+    name: Google Research Blog
+    url: https://research.google/blog/rss/
+    type: lab
+    role: primary
+    method: rss
+    enabled: true
+    relevance: all
+    max_items: 40
+
+  - id: deepmind_blog
+    name: Google DeepMind Blog
+    url: https://deepmind.google/blog/rss.xml
+    type: lab
+    role: primary
+    method: rss
+    enabled: true
+    relevance: all
+    max_items: 40
+
+  - id: huggingface_blog
+    name: Hugging Face Blog
+    url: https://huggingface.co/blog/feed.xml
+    type: blog
+    role: primary
+    method: rss
+    enabled: true
+    relevance: all
+    max_items: 40
+
+  - id: arxiv_cs_cl
+    name: arXiv cs.CL (Computation and Language)
+    url: https://rss.arxiv.org/rss/cs.CL
+    type: preprint
+    role: primary
+    method: rss
+    enabled: true
+    relevance: strong
+    max_items: 25
+
+  - id: mit_news_ai
+    name: MIT News - Artificial Intelligence
+    url: https://news.mit.edu/rss/topic/artificial-intelligence2
+    type: news
+    role: reporting
+    method: rss
+    enabled: true
+    relevance: keywords
+
+  - id: anthropic_news
+    name: Anthropic News
+    url: https://www.anthropic.com/news
+    type: company
+    role: primary
+    method: none
+    enabled: false
+    status_note: >-
+      No RSS feed found (https://www.anthropic.com/news/rss.xml returned 404 on
+      2026-10-05). Not scraped. Add a feed URL here if one appears.

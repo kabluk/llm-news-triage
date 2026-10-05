@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ subject }}</title></head>
+<body style="margin:0;padding:0;background:#F4F3EF;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1B2033;-webkit-text-size-adjust:100%">
+<div style="max-width:640px;margin:0 auto">
+
+<div style="background:#141A2E;padding:24px 22px 20px">
+  <div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#8FA8FF">Editor digest | {{ topic }}</div>
+  <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:1.2;color:#F3EFE6;margin-top:10px">{{ subject }}</div>
+  <div style="font-size:14px;line-height:1.45;color:#B7C3DC;margin-top:8px">{{ top|length }} top events from {{ stats.fetched }} fetched items. Prepared {{ local }}.</div>
+  {% if mode != 'send' %}<div style="display:inline-block;margin-top:10px;border:1px solid #FF8A7A;color:#FF8A7A;border-radius:999px;padding:3px 11px;font-size:11px;letter-spacing:.12em;text-transform:uppercase">Dry run | not emailed</div>{% endif %}
+</div>
+
+<div style="padding:14px 12px 6px">
+<div style="background:#fff;border:1px solid #E2DDD0;border-radius:12px;padding:11px 15px;margin:0 0 14px;font-size:13px;line-height:1.5;color:#4A5068">
+  <b style="color:#1B2033">How to read.</b> The score is an editorial priority from transparent rules, not a probability of truth.
+  {{ thresholds.feature }}+ feature; {{ thresholds.editor_decision }}-{{ thresholds.feature - 1 }} editor's call; below that, log only.
+  Any stop flag blocks the "ready" mark.
+  {% if llm_note %}<br><span style="color:#8A6D1F">{{ llm_note }}</span>{% endif %}
+</div>
+
+{% if not top %}<div style="background:#fff;border-radius:12px;padding:16px;margin-bottom:14px">No new events.</div>{% endif %}
+{% for e in top %}
+<div style="background:#fff;border:1px solid #E2DDD0;border-radius:14px;margin:0 0 16px;padding:14px 17px">
+  <div style="font-size:12px;color:#4A5068">
+    <b style="background:#141A2E;color:#F3EFE6;border-radius:999px;padding:3px 10px">{{ e.total }}/100</b>
+    &nbsp;{{ e.rec.label }}
+    {% if e.flags %}&nbsp;<b style="color:#B23A2E">stop flags: {{ e.flags|length }}</b>{% endif %}
+    {% if e.rec.ready %}&nbsp;<b style="color:#1E7A50">ready</b>{% endif %}
+    {% if e.llm %}&nbsp;| LLM-enriched{% if e.dropped_claims %} ({{ e.dropped_claims }} uncited claim(s) dropped){% endif %}{% endif %}
+  </div>
+  <div style="font-family:Georgia,'Times New Roman',serif;font-size:20px;line-height:1.25;margin:8px 0 6px">{{ e.headline }}</div>
+  <div style="font-size:14px;line-height:1.5"><b>Why it matters:</b> {{ e.why }}</div>
+  <table style="width:100%;border-collapse:collapse;font-size:12px;margin:8px 0;color:#4A5068">
+  {% for c in e.criteria %}
+    <tr><td style="padding:2px 6px 2px 0;white-space:nowrap">{{ c.label }}</td><td style="padding:2px 6px;white-space:nowrap"><b>{{ c.points }}/{{ c.max }}</b>{% if c.via == 'llm' %} llm{% endif %}</td><td style="padding:2px 0">{{ c.reason }}{% if c.insufficient_data %} <i>(insufficient data)</i>{% endif %}</td></tr>
+  {% endfor %}
+  </table>
+  <div style="font-size:13px;line-height:1.5"><b>Established</b> (each with its source):
+    <ul style="margin:4px 0 6px;padding-left:18px">{% for c in e.claims %}<li>{{ c.text }} <a href="{{ c.url }}" style="color:#1A4D8F">source</a>{% if c.kind == 'llm_attributed' %} <i>(llm, cited)</i>{% endif %}</li>{% endfor %}</ul>
+    <b>Unknown:</b>
+    <ul style="margin:4px 0 6px;padding-left:18px">{% for u in e.unknowns %}<li>{{ u }}</li>{% endfor %}</ul>
+    <b>Risk of misstatement:</b>
+    <ul style="margin:4px 0 6px;padding-left:18px">{% for r in e.risk %}<li>{{ r }}</li>{% endfor %}</ul>
+  </div>
+  <div style="font-size:12px;line-height:1.5;color:#4A5068">
+    Status: {{ e.status }} | event date: {{ e.event_date }} | first published: {{ e.pub_date }}<br>
+    Primary source: {% if e.primary_url %}<a href="{{ e.primary_url }}" style="color:#1A4D8F">{{ e.primary_url }}</a>{% else %}<b>not found</b>{% endif %}<br>
+    Coverage: {% for i in e.pubs %}<a href="{{ i.url }}" style="color:#1A4D8F">{{ i.outlet }}</a>{% if not loop.last %}, {% endif %}{% endfor %}<br>
+    <b>Angle:</b> {{ e.angle }}<br><b>Next step:</b> {{ e.next_action }}
+  </div>
+</div>
+{% endfor %}
+
+{% if others %}
+<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#6B6F80;margin:8px 4px">Logged</div>
+<div style="background:#fff;border:1px solid #E2DDD0;border-radius:12px;padding:8px 15px;margin-bottom:14px;font-size:13px;line-height:1.45">
+{% for e in others %}
+  <div style="padding:5px 0;border-bottom:1px solid #F0EDE4"><b>{{ e.total }}</b> | <a href="{{ e.pubs[0].url }}" style="color:#1A4D8F">{{ e.headline }}</a> <span style="color:#6B6F80">({{ e.pubs[0].outlet }}{% if e.flags %}, stop flags: {{ e.flags|length }}{% endif %})</span></div>
+{% endfor %}
+</div>
+{% endif %}
+
+<div style="font-size:12px;line-height:1.5;color:#4A5068;margin:6px 4px 20px">
+  <b>Sources.</b> Fetched {{ stats.fetched }}, relevant {{ stats.relevant }}, new {{ stats.new_items }}, duplicates {{ stats.duplicates }}, source errors {{ stats.source_errors }}.
+  {% for h in broken %}<br><span style="color:#B23A2E">Failed: {{ h.name }}: {{ h.last_status }}: {{ h.last_error }} (failures in a row: {{ h.failures }})</span>{% endfor %}
+  {% for h in not_connected %}<br>Not connected: {{ h.name }}{% if h.note %}: {{ h.note }}{% endif %}{% endfor %}
+</div>
+</div>
+</div>
+</body></html>

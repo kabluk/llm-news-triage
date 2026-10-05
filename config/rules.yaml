@@ -1,0 +1,165 @@
+# What matters and how it is scored. The code reads everything topic-specific
+# from here; to point newstriage at another topic, edit this file and
+# sources.yaml, not the Python.
+
+thresholds:
+  feature: 75          # 75-100: feature in the digest
+  editor_decision: 55  # 55-74: editor's call; below: log only
+
+clustering:
+  window_days: 5          # older events are not merged with new items
+  title_jaccard: 0.42     # title similarity threshold (significant words)
+  min_shared_tokens: 3
+
+# Strong event keys: items sharing a key are the same event whatever the wording.
+# pattern is a regex over title + excerpt + URL; group 1 (or the whole match) is the key.
+event_keys:
+  - {prefix: arxiv, pattern: "(?:arXiv:\\s?|arxiv\\.org/(?:abs|pdf)/)(\\d{4}\\.\\d{4,5})"}
+  - {prefix: github, pattern: "github\\.com/([\\w.-]+/[\\w.-]+)"}
+
+# Relevance filter for sources with relevance: keywords / strong.
+# keywords: pass on one "strong" phrase, or on one "core" AND one "context" term.
+# Terms match as word prefixes, case-insensitive ("releas" hits "released"),
+# except those in case_sensitive, which match whole words with exact case.
+relevance:
+  case_sensitive: [AI, LLM, LLMs, API, GPU]
+  strong:
+    - large language model
+    - language model
+    - LLM
+    - LLMs
+    - foundation model
+    - frontier model
+    - open-weight
+    - open weights
+    - multimodal model
+    - reasoning model
+    - vision-language
+    - AI safety
+    - alignment
+  core:
+    - AI
+    - model
+    - neural
+    - transformer
+    - agent
+    - machine learning
+  context:
+    - release
+    - launch
+    - introduc
+    - benchmark
+    - dataset
+    - paper
+    - research
+    - weights
+    - API
+    - evaluation
+    - training
+    - inference
+    - open source
+  exclude:
+    - fashion model
+    - role model
+    - business model
+
+# Document type: first match from the top wins. status is the human label.
+doc_types:
+  - {type: research_paper, status: "research paper (preprint)", when_source_type: preprint}
+  - {type: release_notes, status: "release notes", patterns: ["release notes", "changelog", "\\bversion \\d", "\\bv\\d+\\.\\d+"]}
+  - {type: announcement, status: "official announcement", when_source_role: primary, when_source_type: company}
+  - {type: blog_post, status: "blog post (research lab)", when_source_role: primary, when_source_type: lab}
+  - {type: blog_post, status: "blog post", when_source_role: primary}
+  - {type: research_paper, status: "research paper (as reported)", patterns: ["\\bpaper\\b", "arXiv", "preprint", "\\bstudy\\b"]}
+  - {type: news, status: "media report"}
+
+scoring:
+  # Six criteria, maxima sum to 100. `label` is what the digest shows.
+  impact:                 # 0-25; the LLM may refine it
+    label: "Impact on practitioners"
+    max: 25
+    groups:
+      - {points: 10, label: "new model or major version", terms: ["releases", "released", "launch", "introducing", "now available", "general availability", "open-weight", "open weights", "open-source model"]}
+      - {points: 8,  label: "capability or benchmark result", terms: ["state-of-the-art", "outperform", "SOTA", "new benchmark", "leaderboard", "human-level"]}
+      - {points: 8,  label: "safety, security or policy", terms: ["safety", "alignment", "red team", "jailbreak", "vulnerab", "policy", "regulat", "rules", "provenance", "watermark", "misuse"]}
+      - {points: 6,  label: "access, pricing or deprecation", terms: ["pricing", "price", "API", "free tier", "rate limit", "deprecat", "availability"]}
+      - {points: 5,  label: "open research artifacts", terms: ["dataset", "open source", "code release", "weights", "model card", "technical report"]}
+      - {points: 4,  label: "compute and infrastructure", terms: ["GPU", "TPU", "compute", "inference", "training run", "data center"]}
+    # Low-signal formats: impact is multiplied by factor.
+    downweight:
+      factor: 0.3
+      patterns: ["\\bwebinar\\b", "\\bcustomer story\\b", "\\bwe're hiring\\b", "\\bpodcast\\b", "\\bevent recap\\b", "\\bmeetup\\b"]
+  primary_source:         # 0-20
+    label: "Primary source"
+    max: 20
+    primary_plus_coverage: 20
+    primary_source_item: 18
+    two_plus_independent_outlets: 12
+    one_reporting_outlet: 8
+    signal_only: 4
+  novelty:                # 0-15
+    label: "Novelty"
+    max: 15
+    new_event: 15
+    new_primary_doc: 11
+    new_outlet_on_known_event: 5
+    nothing_new: 0
+    rehash_patterns: ["explainer", "what to know", "opinion", "\\banalysis\\b", "podcast", "roundup", "recap", "live updates"]
+    rehash_penalty: 6
+  reach:                  # 0-15: independent coverage and stated magnitude
+    label: "Reach"
+    max: 15
+    by_outlets: {1: 5, 2: 9, 3: 12}
+    magnitude_bonus: 3
+    magnitude_patterns: ["\\b\\d+(?:\\.\\d+)?\\s?(?:B|T)\\b", "\\b\\d+(?:\\.\\d+)?\\s?(?:billion|trillion|million)\\b", "\\d+ ?(?:percent|%)", "\\bmillions? of\\b"]
+    # Without impact, reach is capped (otherwise an off-topic post scores just for being widely covered).
+    low_impact_threshold: 5
+    low_impact_cap: 4
+  freshness:              # 0-10, by event date, else first publication
+    label: "Freshness"
+    max: 10
+    steps_hours: [[24, 10], [48, 8], [72, 6], [168, 3]]
+  clarity:                # 0-15: can it be stated accurately in two sentences; the LLM may refine it
+    label: "Clarity"
+    max: 15
+    by_doc_type:
+      release_notes: 14
+      announcement: 13
+      blog_post: 10
+      research_paper: 9
+      news: 8
+    single_source_complex_penalty: 3
+    flag_penalty: 4
+
+# Stop flags. Any flag blocks the "ready" mark.
+flags:
+  # Strong wording that needs more than one secondary source.
+  strong_claim_terms: ["breakthrough", "state-of-the-art", "\\bSOTA\\b", "\\bAGI\\b", "beats (?:GPT|Gemini|Claude|Llama)", "surpass", "human-level", "\\bfirst ever\\b", "\\brecord-breaking\\b", "\\bnew record\\b"]
+  # Wording that implies an official release; without a primary source in the input, flag it.
+  primary_expected_patterns: ["\\b(?:releases|released|launches|launched|unveils|unveiled|announces|announced)\\b"]
+  speculation_patterns: ["\\bleak(?:ed|s)?\\b", "\\brumou?r(?:ed|s)?\\b", "\\breportedly\\b", "sources (?:say|said)", "\\bcould (?:be|launch)\\b", "\\bexpected to\\b", "people familiar with"]
+  pii_patterns:
+    - "\\b\\d{3}[-.) ]\\s?\\d{3}[-.]\\d{4}\\b"                                 # phone
+    - "\\b[\\w.+-]+@[\\w-]+\\.[\\w.]+\\b"                                       # email address
+    - "\\b(?:DOB|date of birth)\\b"
+    - "\\b\\d{1,5} [A-Z][a-z]+ (?:Street|St\\.|Avenue|Ave\\.|Road|Rd\\.)\\b"   # street address
+  # Units for the number-mismatch check across reports of one event.
+  number_units: ["percent", "%", "parameters", "params", "tokens", "users", "GPUs", "languages", "B", "billion"]
+  unit_aliases: {percent: "%", params: parameters, b: billion}
+  number_mismatch_ratio: 0.2
+  date_mismatch_days: 2
+
+# Editor hints without the LLM. Suggestions to the editor, not publishable text.
+editorial:
+  angle:
+    release_notes: "What changed, for whom, from which version; link the release notes."
+    announcement: "What was announced vs. what is available today; who can use it and at what price."
+    research_paper: "The claim, the evidence offered, and its limits; a preprint is not a peer-reviewed result."
+    blog_post: "Summarize with attribution; separate the publisher's claims from independent evidence."
+    news: "Attributed report: who says it, what is backed by a primary source, what is not."
+  next_action:
+    no_primary: "Find the publisher's own page (release notes, model card, paper) before featuring."
+    signal_only: "Open the original article and find the primary source."
+    flags: "Clear the stop flags: check the wording against the primary source."
+    preprint: "Check the paper's own numbers and whether code or weights are released."
+    ready: "Decide whether to feature it; write in your own words with links."

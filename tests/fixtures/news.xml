@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0"><channel><title>Tech Daily (synthetic test feed)</title>
+<item><title>Acme AI releases Nova-2 open-weight language model</title>
+<link>https://news.example/nova-2?utm_source=rss</link>
+<description>The 70B parameters model is available under an open license, the company said.</description>
+<pubDate>Tue, 29 Sep 2026 09:00:00 GMT</pubDate></item>
+<item><title>Acme AI releases open-weight Nova-2 model for developers</title>
+<link>https://other.example/nova-2</link>
+<description>Weights and a model card are published; the API price was not disclosed.</description>
+<pubDate>Tue, 29 Sep 2026 09:30:00 GMT</pubDate></item>
+<item><title>Researchers find leaked benchmark scores reportedly from an unreleased model</title>
+<link>https://news.example/leak</link>
+<description>The numbers could not be confirmed.</description>
+<pubDate>Tue, 29 Sep 2026 08:00:00 GMT</pubDate></item>
+<item><title>AI training dataset exposed personal records</title>
+<link>https://news.example/dataset-exposed</link>
+<description>Records included phone numbers such as 555-123-4567.</description>
+<pubDate>Tue, 29 Sep 2026 07:00:00 GMT</pubDate></item>
+<item><title>New study on scaling laws for small models</title>
+<link>https://news.example/scaling-study</link>
+<description>The paper (arXiv:2610.01234) argues that data quality matters more than size.</description>
+<pubDate>Tue, 29 Sep 2026 06:00:00 GMT</pubDate></item>
+<item><title>Local bakery wins award</title>
+<link>https://news.example/bakery</link>
+<description>Not related.</description>
+<pubDate>Tue, 29 Sep 2026 05:00:00 GMT</pubDate></item>
+</channel></rss>
