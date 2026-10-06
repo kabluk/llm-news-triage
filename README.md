@@ -1,5 +1,7 @@
 # llm-news-triage
 
+![llm-news-triage](.github/social-preview.png)
+
 [![CI](https://github.com/kabluk/llm-news-triage/actions/workflows/ci.yml/badge.svg)](https://github.com/kabluk/llm-news-triage/actions/workflows/ci.yml)
 
 Twice-daily news triage on the Claude API with one hard rule:
