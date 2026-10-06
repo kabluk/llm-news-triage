@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Example Lab blog (synthetic test feed)</title>
+<id>urn:example:lab</id><updated>2026-09-29T10:00:00Z</updated>
+<entry><title>Nova-2 technical report and model card</title>
+<link href="https://lab.example/nova-2-report"/><id>urn:example:lab:1</id>
+<updated>2026-09-29T10:00:00Z</updated>
+<summary>Evaluation details, safety testing and the license for Nova-2.</summary></entry>
+</feed>

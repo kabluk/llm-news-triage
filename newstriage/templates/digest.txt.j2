@@ -1,0 +1,66 @@
+{{ subject }}
+Issue {{ issue_key }} | prepared {{ local }}{% if mode != 'send' %} | DRY RUN, not emailed{% endif %}
+
+Topic: {{ topic }}
+Fetched {{ stats.fetched }}, relevant {{ stats.relevant }}, new {{ stats.new_items }}, duplicates {{ stats.duplicates }}; new events {{ stats.new_events }}, updated {{ stats.updated_events }}; source errors {{ stats.source_errors }}.
+Scores are an editorial priority computed by rules, not a probability of truth. Thresholds: >={{ thresholds.feature }} feature; {{ thresholds.editor_decision }}-{{ thresholds.feature - 1 }} editor's call; below that, log only.
+{% if llm_note %}
+{{ llm_note }}
+{% endif %}
+
+=== TOP EVENTS ===
+{% if not top %}No new events.
+{% endif %}
+{% for e in top %}
+
+{{ loop.index }}. {{ e.headline }}
+   {{ e.total }}/100 | {{ e.rec.label }}{% if e.rec.ready %} | READY{% else %} | not marked ready{% endif %}{% if e.llm %} | enriched by LLM{% if e.dropped_claims %} ({{ e.dropped_claims }} uncited claim(s) dropped){% endif %}{% endif %}
+
+{% for c in e.criteria %}
+   - {{ c.label }}: {{ c.points }}/{{ c.max }}{% if c.insufficient_data %} (insufficient data){% endif %}{% if c.via == 'llm' %} [llm]{% endif %} | {{ c.reason }}
+{% endfor %}
+   Why it matters: {{ e.why }}
+   Established:
+{% for c in e.claims %}
+   * {{ c.text }}{% if c.kind == 'attributed' %} [attributed]{% elif c.kind == 'llm_attributed' %} [llm, cited]{% endif %}
+
+     {{ c.url }}
+{% endfor %}
+   Unknown:
+{% for u in e.unknowns %}
+   * {{ u }}
+{% endfor %}
+   Event date: {{ e.event_date }} | first published: {{ e.pub_date }}
+   Document status: {{ e.status }}
+   Risk of misstatement:
+{% for r in e.risk %}
+   * {{ r }}
+{% endfor %}
+   Primary source: {{ e.primary_url or 'NOT FOUND' }} ({{ e.verification }})
+   Coverage ({{ e.n_items }}):
+{% for i in e.pubs %}
+   * {{ i.outlet }} ({{ i.date }}): {{ i.title }}{% if i.signal %} [aggregator signal]{% endif %}
+
+     {{ i.url }}
+{% endfor %}
+   Angle: {{ e.angle }}
+   Next step: {{ e.next_action }}
+{% endfor %}
+
+=== LOGGED ===
+{% for e in others %}
+- {{ e.total }} | {{ e.rec.label }}{% if e.flags %} | stop flags: {{ e.flags|length }}{% endif %} | {{ e.headline }} ({{ e.pubs[0].outlet }}{% if e.n_items > 1 %} + {{ e.n_items - 1 }} more{% endif %})
+  {{ e.pubs[0].url }}
+{% endfor %}
+
+=== SOURCES ===
+{% for h in broken %}
+FAILED: {{ h.name }} ({{ h.method }}): {{ h.last_status }}: {{ h.last_error }}; consecutive failures: {{ h.failures }}
+{% endfor %}
+{% for h in not_connected %}
+Not connected: {{ h.name }}{% if h.note %}: {{ h.note }}{% endif %}
+
+{% endfor %}
+{% if not broken %}
+All enabled sources responded.
+{% endif %}

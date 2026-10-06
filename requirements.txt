@@ -1,0 +1,8 @@
+requests>=2.31
+feedparser>=6.0
+PyYAML>=6.0
+Jinja2>=3.1
+# optional at runtime: LLM enrichment runs only when ANTHROPIC_API_KEY is set
+anthropic>=1.0
+# tests
+pytest>=8
